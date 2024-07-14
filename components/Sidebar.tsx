@@ -6,6 +6,7 @@ import React from "react";
 import { sidebarLinks } from "@/constants";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
+import Footer from "./Footer";
 
 export default function Sidebar({ user }: SiderbarProps) {
   const pathname = usePathname();
@@ -24,7 +25,7 @@ export default function Sidebar({ user }: SiderbarProps) {
         </Link>
         {sidebarLinks.map((item) => {
           const isActive =
-            pathname === item.route || pathname.startsWith(`${item.route}`);
+            pathname === item.route || pathname.startsWith(`${item.route}/`);
           return (
             <Link
               href={item.route}
@@ -48,7 +49,7 @@ export default function Sidebar({ user }: SiderbarProps) {
 
         USER
       </nav>
-      FOOTER
+      <Footer user={user}/>
     </section>
   );
 }

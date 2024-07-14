@@ -2,13 +2,10 @@ import React from 'react'
 import HeaderBox  from '@/components/HeaderBox';
 import TotalBalanceBox from '@/components/TotalBalanceBox';
 import RightSidebar from '@/components/RightSidebar';
+import { getLoggedInUser } from '@/lib/actions/user.actions';
 
-export default function Home(){
-    const loggedIn = {
-        firstName: "Kaiwen",
-        lastName: "Xie",
-        email: "xiekaiwen3@gmail.com"
-    }
+export default async function Home(){
+    const loggedIn = await getLoggedInUser()
     return(
         <section className='home'> 
         {/* .home is a class created using tailwindcss classes */}
@@ -17,7 +14,7 @@ export default function Home(){
                     <HeaderBox 
                     type="greeting" 
                     title="Welcome"
-                    user={loggedIn.firstName}
+                    user={loggedIn?.name}
                     subtext="Access and manage your account and transactions efficiently."
                     />
                     <TotalBalanceBox 
