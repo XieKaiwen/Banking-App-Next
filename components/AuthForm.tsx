@@ -13,7 +13,8 @@ import CustomInput from "./CustomInput";
 import { authFormSchema } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { getLoggedInUser, signIn, signUp } from "@/lib/actions/user.actions";
+import { signIn, signUp } from "@/lib/actions/user.actions";
+import PlaidLink from "./PlaidLink";
 
 
 export default function AuthForm({ type }: AuthFormProps) {
@@ -31,7 +32,7 @@ export default function AuthForm({ type }: AuthFormProps) {
       ...(type === "sign-up" && {
         firstName: "",
         lastName: "",
-        address: "",
+        address1: "",
         city: "",
         state: "",
         postalCode: "",
@@ -63,7 +64,19 @@ export default function AuthForm({ type }: AuthFormProps) {
       }
       if(type === 'sign-up'){
         // console.log("Calling signUp with data:", data);
-        const newUser = await signUp(data);
+        const userData = {
+          firstName: data.firstName!,
+          lastName: data.lastName!,
+          address1: data.address1!,
+          city: data.city!,
+          state: data.state!,
+          postalCode: data.postalCode!,
+          dateOfBirth: data.dateOfBirth!,
+          ssn: data.ssn!,
+          email: data.email,
+          password: data.password
+        }
+        const newUser = await signUp(userData);
         console.log("Retrieved user:", newUser);
         // console.log("HELLOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
         setUser(newUser);
@@ -101,9 +114,12 @@ export default function AuthForm({ type }: AuthFormProps) {
           </p>
         </div>
       </header>
-      {user ? (
-        <div className="flex flex-col gap-4">{/* Plaid Link */}</div>
-      ) : (
+    {user ? (
+        <div className="flex flex-col gap-4">
+          {/* Plaid Link */}
+          <PlaidLink user={user} variant="primary" />
+        </div>
+      ) : ( 
         <>
           {/* Form from Shadcn */}
           <Form {...form}>
@@ -128,7 +144,7 @@ export default function AuthForm({ type }: AuthFormProps) {
                   
                   <CustomInput
                     control={form.control}
-                    name="address"
+                    name="address1"
                     label="Address"
                     placeholder="Enter your address"
                   />
@@ -136,7 +152,7 @@ export default function AuthForm({ type }: AuthFormProps) {
                     control={form.control}
                     name="city"
                     label="City"
-                    placeholder="Enter your address"
+                    placeholder="Enter your city"
                   />
 
                   <div className="flex gap-4">
@@ -209,7 +225,7 @@ export default function AuthForm({ type }: AuthFormProps) {
             </Link>
           </footer>
         </>
-      )}
+      )} 
     </section>
   );
 }
