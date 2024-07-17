@@ -1,6 +1,6 @@
 "use server";
 
-import { ID } from "node-appwrite";
+import { ID, Query } from "node-appwrite";
 import { createAdminClient, createSessionClient } from "../server/appwrite";
 import { cookies } from "next/headers";
 import { encryptId, extractCustomerIdFromUrl, parseStringify } from "../utils";
@@ -19,12 +19,36 @@ const {APPWRITE_DATABASE_ID : DATABASE_ID,
   APPWRITE_BANK_COLLECTION_ID: BANK_COLLECTION_ID,
 } = process.env
 
+
+export async function getUserInfo({userId} : getUserInfoProps){
+  try {
+    const {database} = await createAdminClient();
+    const user = await database.listDocuments(
+      DATABASE_ID!,
+      USER_COLLECTION_ID!,
+      [Query.equal('userId', [userId])]
+    )
+    return parseStringify(user.documents[0])
+  } catch (error) {
+    console.log(error);
+    
+  }
+}
+
 export async function signIn({ email, password }: signInProps) {
   try {
     const { account } = await createAdminClient();
-    const response = await account.createEmailPasswordSession(email, password);
+    const session = await account.createEmailPasswordSession(email, password);
 
-    return parseStringify(response);
+    cookies().set("appwrite-session", session.secret, {
+      path: "/",
+      httpOnly: true,
+      sameSite: "strict",
+      secure: true,
+    });
+    const user = await getUserInfo({userId: session.userId})
+
+    return parseStringify(user);
   } catch (error) {
     console.error("Error", error);
   }
@@ -88,7 +112,9 @@ export const signUp = async ({ password, ...userData }: SignUpParams) => {
 export async function getLoggedInUser() {
   try {
     const { account } = await createSessionClient();
-    const user = await account.get();
+    const result = await account.get();
+
+    const user = await getUserInfo({userId:result.$id})
     return parseStringify(user);
   } catch (error) {
     return null;
@@ -113,7 +139,7 @@ export async function createBankAccount({
   accountId,
   accessToken,
   fundingSourceUrl,
-  sharableId,
+  shareableId,
 } : createBankAccountProps) {
   try {
     const {database} = await createAdminClient();
@@ -127,7 +153,7 @@ export async function createBankAccount({
         accountId,
         accessToken,
         fundingSourceUrl,
-        sharableId,
+        shareableId,
       }
     )
   } catch (error) {
@@ -197,14 +223,14 @@ export async function exchangePublicToken({
     // Check if the funding source exists
     if (!fundingSourceUrl) throw Error;
 
-    // Create a bank account usingf the user ID, item ID, account ID, access token, funding source URL, and sharable ID
+    // Create a bank account usingf the user ID, item ID, account ID, access token, funding source URL, and shareable ID
     await createBankAccount({
       userId: user.$id,
       bankId: itemId,
       accountId: accountData.account_id,
       accessToken,
       fundingSourceUrl,
-      sharableId: encryptId(accountData.account_id),
+      shareableId: encryptId(accountData.account_id),
     });
     // Revalidate the path to reflect the changes
     revalidatePath("/");
@@ -214,5 +240,35 @@ export async function exchangePublicToken({
     });
   } catch (error) {
     console.error("An error occurred while creating exchanging token: ", error);
+  }
+}
+
+export async function getBanks({userId} : getBanksProps){
+  try {
+    const {database} = await createAdminClient();
+    const banks = await database.listDocuments(
+      DATABASE_ID!,
+      BANK_COLLECTION_ID!,
+      [Query.equal('userId', [userId])]
+    )
+    return parseStringify(banks.documents)
+  } catch (error) {
+    console.log(error);
+    
+  }
+}
+
+export async function getBank({documentId} : getBankProps){
+  try {
+    const {database} = await createAdminClient();
+    const bank = await database.listDocuments(
+      DATABASE_ID!,
+      BANK_COLLECTION_ID!,
+      [Query.equal('$id', [documentId])]
+    )
+    return parseStringify(bank.documents[0])
+  } catch (error) {
+    console.log(error);
+    
   }
 }
