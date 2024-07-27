@@ -9,7 +9,7 @@ import RecentTransactions from "@/components/RecentTransactions";
 
 export default async function Home({searchParams : {id, page}} : SearchParamProps) {
   const currentPage = Number(page as string) || 1;
-const loggedIn = await getLoggedInUser();
+  const loggedIn = await getLoggedInUser();
   const accounts = await getAccounts({ userId: loggedIn.$id });
 
   if (!accounts) return;
@@ -18,6 +18,8 @@ const loggedIn = await getLoggedInUser();
   const account = await getAccount({ appwriteItemId });
 
 //   console.log({accountsData, account});
+  // console.log(account.transactions);
+
   
   return (
     <section className="home">
@@ -41,7 +43,7 @@ const loggedIn = await getLoggedInUser();
 
       <RightSidebar
         user={loggedIn}
-        transactions={[accounts?.transactions]}
+        transactions={account?.transactions}
         banks={accountsData?.slice(0,2)}
       />
     </section>
